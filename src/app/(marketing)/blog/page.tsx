@@ -4,6 +4,7 @@ import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, ArrowRight, User } from "lucide-react";
+import { blogPosts, categories } from "@/lib/blog-data";
 
 export const metadata: Metadata = {
   title: "Blog | ReplyFlow - Review Management Tips & Industry Insights",
@@ -28,85 +29,6 @@ export const metadata: Metadata = {
     canonical: "https://replyflow.io/blog",
   },
 };
-
-const blogPosts = [
-  {
-    slug: "respond-negative-reviews-2026",
-    title: "How to Respond to Negative Reviews in 2026: The Complete Guide",
-    excerpt:
-      "Learn the proven strategies top businesses use to turn negative reviews into opportunities for growth and customer loyalty.",
-    category: "Strategy",
-    author: "Sarah Chen",
-    date: "2026-01-08",
-    readTime: "8 min read",
-    featured: true,
-  },
-  {
-    slug: "ai-review-response-best-practices",
-    title: "AI Review Responses: Best Practices for Authentic Engagement",
-    excerpt:
-      "Discover how to use AI to respond to reviews while maintaining your brand's authentic voice and personal touch.",
-    category: "AI & Technology",
-    author: "Michael Torres",
-    date: "2026-01-05",
-    readTime: "6 min read",
-    featured: true,
-  },
-  {
-    slug: "google-reviews-ranking-factor",
-    title: "How Google Reviews Impact Your Local SEO in 2026",
-    excerpt:
-      "Understanding the direct connection between review management and your Google Business Profile ranking.",
-    category: "SEO",
-    author: "Emily Watson",
-    date: "2026-01-02",
-    readTime: "7 min read",
-    featured: false,
-  },
-  {
-    slug: "review-response-time-statistics",
-    title: "Review Response Time: Statistics That Will Change Your Strategy",
-    excerpt:
-      "New research reveals how response time affects customer perception and repeat business. The data might surprise you.",
-    category: "Research",
-    author: "David Kim",
-    date: "2025-12-28",
-    readTime: "5 min read",
-    featured: false,
-  },
-  {
-    slug: "restaurant-review-templates",
-    title: "50 Restaurant Review Response Templates That Actually Work",
-    excerpt:
-      "Copy-and-customize templates for every type of restaurant review, from glowing praise to constructive criticism.",
-    category: "Templates",
-    author: "Sarah Chen",
-    date: "2025-12-22",
-    readTime: "12 min read",
-    featured: false,
-  },
-  {
-    slug: "multi-location-review-management",
-    title: "Managing Reviews Across Multiple Locations: A Franchise Guide",
-    excerpt:
-      "Best practices for maintaining consistent brand voice while managing reviews for multiple business locations.",
-    category: "Enterprise",
-    author: "Michael Torres",
-    date: "2025-12-18",
-    readTime: "9 min read",
-    featured: false,
-  },
-];
-
-const categories = [
-  "All",
-  "Strategy",
-  "AI & Technology",
-  "SEO",
-  "Research",
-  "Templates",
-  "Enterprise",
-];
 
 export default function BlogPage() {
   const featuredPosts = blogPosts.filter((post) => post.featured);

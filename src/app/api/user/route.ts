@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { getUser } from "@/lib/supabase/server";
+import { getUser, createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 const updateSchema = z.object({
   name: z.string().min(2).optional(),
@@ -74,5 +75,46 @@ export async function PATCH(request: Request) {
     }
 
     return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
+  }
+}
+
+export async function DELETE() {
+  try {
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Delete user data from Prisma (cascade will handle related records)
+    await prisma.user.delete({
+      where: { id: user.id },
+    });
+
+    // Sign out the user from the current session
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+
+    // Delete user from Supabase Auth (requires service role key)
+    // This is optional but recommended for complete cleanup
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const adminClient = createAdminClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+        await adminClient.auth.admin.deleteUser(user.id);
+      } catch (authError) {
+        // Log but don't fail if Supabase auth deletion fails
+        console.error("Failed to delete Supabase auth user:", authError);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Account deleted successfully"
+    });
+  } catch (error) {
+    console.error("Delete user error:", error);
+    return NextResponse.json({ error: "Failed to delete account" }, { status: 500 });
   }
 }
