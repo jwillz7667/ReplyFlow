@@ -1,0 +1,196 @@
+// Prisma Schema for ReplyFlow
+// AI-powered review response platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
+}
+
+// ============================================
+// User & Authentication
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  avatarUrl     String?
+
+  // Subscription info
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  stripePriceId        String?
+  stripeCurrentPeriodEnd DateTime?
+
+  // Plan limits
+  plan              Plan      @default(FREE)
+  responsesUsed     Int       @default(0)
+  responsesLimit    Int       @default(5)
+
+  // Settings
+  businessName      String?
+  businessType      String?
+  brandVoice        String?   @default("professional")
+  defaultLanguage   String?   @default("en")
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  businesses    Business[]
+  responses     ReviewResponse[]
+  templates     Template[]
+  usageRecords  UsageRecord[]
+
+  @@map("users")
+}
+
+enum Plan {
+  FREE
+  STARTER
+  PRO
+  AGENCY
+}
+
+// ============================================
+// Business Management
+// ============================================
+
+model Business {
+  id            String    @id @default(cuid())
+  userId        String
+
+  name          String
+  type          String?   // restaurant, retail, service, etc.
+  description   String?
+  address       String?
+  phone         String?
+  website       String?
+
+  // Brand settings
+  brandVoice    String?   @default("professional")
+  toneKeywords  String[]  @default([])
+  avoidKeywords String[]  @default([])
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responses     ReviewResponse[]
+
+  @@index([userId])
+  @@map("businesses")
+}
+
+// ============================================
+// Review Responses
+// ============================================
+
+model ReviewResponse {
+  id            String    @id @default(cuid())
+  userId        String
+  businessId    String?
+
+  // Original review
+  reviewText      String
+  reviewerName    String?
+  reviewRating    Int?      // 1-5 stars
+  reviewPlatform  String?   // google, yelp, facebook, etc.
+
+  // Generated response
+  responseText    String
+  responseTone    String?   // professional, friendly, empathetic
+
+  // Metadata
+  tokensUsed      Int       @default(0)
+  modelUsed       String?   @default("gpt-4-turbo-preview")
+  generationTime  Int?      // milliseconds
+
+  // User actions
+  wasEdited       Boolean   @default(false)
+  editedText      String?
+  wasCopied       Boolean   @default(false)
+  wasUsed         Boolean   @default(false)
+  rating          Int?      // user rating of response quality
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business      Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([businessId])
+  @@index([createdAt])
+  @@map("review_responses")
+}
+
+// ============================================
+// Templates
+// ============================================
+
+model Template {
+  id            String    @id @default(cuid())
+  userId        String
+
+  name          String
+  description   String?
+  category      String?   // positive, negative, neutral, complaint
+
+  // Template content
+  promptTemplate String   // The template with placeholders
+  exampleOutput  String?
+
+  // Settings
+  tone          String?   @default("professional")
+  isPublic      Boolean   @default(false)
+  useCount      Int       @default(0)
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([category])
+  @@map("templates")
+}
+
+// ============================================
+// Usage Tracking
+// ============================================
+
+model UsageRecord {
+  id            String    @id @default(cuid())
+  userId        String
+
+  // Usage details
+  action        String    // generate, copy, export
+  tokensUsed    Int       @default(0)
+  cost          Float     @default(0)
+
+  // Metadata
+  metadata      Json?
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("usage_records")
+}
